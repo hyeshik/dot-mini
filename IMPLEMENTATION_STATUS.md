@@ -238,17 +238,62 @@ replace either installed app. The one-time P0-08 follow-up is scheduled for
 
 ## Remaining scope
 
-- Phase 2 live acceptance of implemented features: configurable global shortcut
-  with conflict handling; Settings;
-  opt-in launch at login; persisted dimensions/placement; focus-loss policy and
-  pinning; safe Escape dismissal; first-run explanation and browser-app fallback.
-- Acceptance: authenticated 50 hide/show cycles, hotkey/menu equivalence, idle/latency/memory
-  measurements, offline recovery, attachment/link/task workflows, sleep/wake and
-  display changes, oldest/current macOS, and next-day session retention.
-- Phase 3: only after MVP acceptance, Developer ID signing/notarization,
-  distribution/update strategy and smoke checks. Signing credentials and a release
-  destination have not been supplied. Optional multi-profile support is not
-  committed by SPEC and remains conditional on upstream support.
+### Requirement audit — 2026-10-29
+
+The source, test coverage, recorded pilot observations, and staged build were
+compared against SPEC. A passing synthetic test proves only its stated mechanism;
+it does not substitute for a real-account, operating-system, or distribution trial.
+Historical product observations predate the deferred build 8 unless stated otherwise.
+
+| SPEC item | Evidence available | Remaining proof / decision |
+| --- | --- | --- |
+| Phase 0A artifacts | Pilot source, unchanged signed Release bundle, README, and POC_REPORT exist. | None for the pilot deliverable itself. |
+| P0-01–07, P0-11 | Ordered real-account pilot evidence and user confirmations in POC_REPORT; three process exits, forced exit, and reboot recorded. | Gate passed for that account and pilot identity, not universal provider compatibility. |
+| P0-08 | Follow-up scheduled for 2026-10-30 10:30 KST. | Actual next-day result from the unchanged pilot. |
+| P0-09 | Clearing followed by manual sign-in recovered. | Website sign-out, genuine expiration, and account-switch scenarios; clearing is not their substitute. |
+| P0-10 | Pilot file picker opened/cancelled; browser dispatch succeeded. | Actual harmless upload, task/approval details, external link, download handoff, and browser-side result. No task approval should be granted merely to test. |
+| P0-12 | Pilot ad-hoc Release persistence passed; all current SwiftPM products compile in Release. | Developer ID/notarized builds and production-identity persistence are separate checks. |
+| FR-01 | Status item and accessory app implemented; historical product launch/user confirmation. | Repeat on the final acceptance bundle and supported platform matrix. |
+| FR-02 | Menu click and shortcut both call `toggleDot`; user confirmed original menu toggle. Later double-toggle fix is implemented. | Confirm repeated real status-item clicks after applying the deferred fix. |
+| FR-03 | User confirmed real pilot message/reply; separate product sign-in and composer were observed. | Send/receive with the final product bundle; pilot success alone is insufficient. |
+| FR-04 | Same production controllers retain window/view/draft for 50 synthetic cycles; earlier product draft survived ten cycles. | Final authenticated 50-cycle and scroll-position continuity trial. |
+| FR-05 | Source review finds no browser/ChatGPT credential import, Keychain access, or session extraction. | Satisfied by current implementation; preserve during subsequent changes. |
+| FR-06 | Defaults, punctuation choices, persistence, OS reservations, exclusive cross-process conflicts, and queued-event suppression pass. | Actual keyboard invocation from another foreground app and menu/hotkey equivalence. Shared/app-local conflicts remain the documented platform limitation. |
+| FR-07 | Product constructs `.default()` website storage before WebKit creation under its own stable identity. | Authenticated product quit/relaunch and longevity trials; pilot identity cannot prove this. |
+| FR-08 | Default-browser action and safe entry URL implemented; pilot native dispatch succeeded. | Verify the resulting browser window actually reaches the user's dot. |
+| FR-09 | All menu/Settings handlers exist; first-run Settings rendered; browser-mode menu guards implemented. | Exercise every command, keyboard access, Settings persistence, and onboarding on the final bundle. |
+| FR-10 | ServiceManagement status/idempotence/failure/concurrency tests pass with an injected backend. | User opt-in at a stable installed location, actual OS registration, then reboot. No registration has been performed. |
+| FR-11 | Geometry tests cover small screens, negative origins, oversized frames, and disconnected-screen coordinates. | Physical display changes, scaling, notch, full-screen Spaces, and menu-bar auto-hide. |
+| FR-12 | URL validation and preference persistence pass; native reset confirmation and recovery code exist; pilot reload/reset recovery observed. | Final product Reload, Save and Open, and reset Cancel/Confirm recovery trials. Preserve the longevity pilot until P0-08 is complete. |
+| FR-13 | Navigation policy tests, native file-picker delegate, and explicit popup/download/media browser handoffs exist. | Real website workflows and browser handoffs from the acceptance matrix. |
+| FR-14 | Production controllers pass native synthetic pinning and focus-loss checks, including inactive Settings and owned-sheet protection. | Final live-site multi-window/dialog behavior. |
+| FR-15 / Phase 3 | Editable/native app icon completed by explicit user request. Existing logs redact URLs and error detail. | MVP acceptance first; then distribution/update design, Developer ID signing, notarization, and update smoke checks. Credentials and release destination are not provided. |
+| FR-16 / §13 | Explicitly conditional, uncommitted future capabilities. | No multiple-profile implementation is required without a supported upstream capability and an agreed user need. |
+| §5.1 composer focus refinement | Visible/hidden/missing/covered/disabled/ambiguous inputs, bounded hydration, cancellation, passive focus, first load, unhide, and restoration pass in fixtures. | Verify the current real ChatGPT composer after installing the deferred update. Missing markup remains a silent no-op. |
+| §5.2 Escape and dialogs | Real native key routing in the fixture preserves web-owned Escape and attached sheets, and hides on unhandled Escape. | Real website modals, pickers, and in-page operations. |
+| §5.3 / §7.5 defaults and onboarding | Native unofficial explanation, mode choice, help link, optional login control, shortcut, validated entry URL, and documented defaults are implemented. | Full first-run interaction and assistive-technology check on the acceptance build. |
+| §5.6 recovery | Injected offline, cancelled, HTTP-independent navigation, and web-process errors have safe explicit recovery paths; async browser-launch failure returns to Settings. | Actual offline/reconnect, upstream error, stale session, and WebKit process recovery with a real account. |
+| §7.1–7.4 architecture | Swift/AppKit/SwiftUI, single retained WebKit instance, visibility state, optional preload, persistent per-app storage, top-level routing, and confirmable reset are implemented; deployment target is 14.0. | Verify the composed lifecycle on the final supported OS matrix. Build success is not runtime compatibility proof. |
+| §7.6 privacy and identity | About/Settings disclose unofficial status and separate local-computer connector; no native message bridge, private API, user-agent spoof, browser data import, telemetry, or arbitrary keyboard monitor. The sole focus script is first-party and metadata-only. | Recheck service/OAuth policies and distribution entitlements before release; technical embedding success is not an endorsement. |
+| §8 warm/cold latency | No valid measured latency acceptance series exists. | 20 real click/hotkey trials at ≤250 ms; fresh-process icon appearance at ≤2 s. Measure final product, not test harness startup. |
+| §8 idle CPU / memory | No complete app-plus-WebKit baseline exists. No YourDotMini process was running during this audit. | Settle the real page, measure hidden CPU and combined process memory before/after 50 cycles. Do not treat wrapper-only RSS as total memory. |
+| §9 accessibility / appearance | Native labels and template icon exist; icon variants were visually inspected. Passive-focus fixtures pass. | VoiceOver, full keyboard operation, native light/dark/high-contrast surfaces, and unrelated-notification behavior. |
+| §10 platform / resilience / fallback matrix | macOS 27.0.1 synthetic checks and sandbox bookmark restoration pass. | macOS 14 runtime environment, sleep/wake/display scenarios, and a real dedicated browser web app with its own login and dot target. |
+
+### Next acceptance gate
+
+The next gate is final-product live acceptance, not more isolated test passes.
+Build 8 is prepared and verified, but applying updates was explicitly deferred by
+the user. Do not replace or launch the real app to bypass that choice. When the
+user chooses to apply it, run the outstanding real-account/window/workflow and
+performance checks against that exact bundle, retaining its identity and hash.
+Manual authentication, account switching, an opt-in login item, and reboot require
+the user's participation. Oldest-OS acceptance requires a macOS 14 test environment.
+
+Phase 3 remains gated on the above MVP acceptance; source compilation, ad-hoc
+signing, and the generated icon do not satisfy signed/notarized distribution.
+The full objective is incomplete. The pending evidence and user/environment
+dependencies above must remain visible rather than being converted to passes.
 
 The implementation is not release-ready. No launch-at-login registration,
 external publication, or distribution signing has been performed.
