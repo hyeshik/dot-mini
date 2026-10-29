@@ -230,7 +230,7 @@ Sandbox browser-app integration (2026-10-29, macOS 27.0.1):
 
 This passes the sandbox app-selection/bookmark/relaunch mechanism on this host.
 It does not prove Safari/other browser web-app authentication, direct dot targeting,
-window activation semantics, oldest-OS support, or product login-item behavior.
+window activation semantics, older-OS compatibility, or product login-item behavior.
 After adding the target, all 46 tests in 8 suites pass, and every SwiftPM product
 compiles in Release with Swift warnings treated as errors. These builds do not
 replace either installed app. The one-time P0-08 follow-up is scheduled for
@@ -239,6 +239,11 @@ replace either installed app. The one-time P0-08 follow-up is scheduled for
 ## Remaining scope
 
 ### Requirement audit — 2026-10-29
+
+Scope decision: the user waived macOS 14 / oldest-release runtime validation on
+2026-10-29. Runtime acceptance now uses the reference Mac running macOS 27.0.1.
+The existing 14.0 deployment target is unchanged; it is not a compatibility claim.
+The waived test is excluded from completion gates, not recorded as passed.
 
 The source, test coverage, recorded pilot observations, and staged build were
 compared against SPEC. A passing synthetic test proves only its stated mechanism;
@@ -253,7 +258,7 @@ Historical product observations predate the deferred build 8 unless stated other
 | P0-09 | Clearing followed by manual sign-in recovered. | Website sign-out, genuine expiration, and account-switch scenarios; clearing is not their substitute. |
 | P0-10 | Pilot file picker opened/cancelled; browser dispatch succeeded. | Actual harmless upload, task/approval details, external link, download handoff, and browser-side result. No task approval should be granted merely to test. |
 | P0-12 | Pilot ad-hoc Release persistence passed; all current SwiftPM products compile in Release. | Developer ID/notarized builds and production-identity persistence are separate checks. |
-| FR-01 | Status item and accessory app implemented; historical product launch/user confirmation. | Repeat on the final acceptance bundle and supported platform matrix. |
+| FR-01 | Status item and accessory app implemented; historical product launch/user confirmation. | Repeat on the final acceptance bundle and reference Mac. |
 | FR-02 | Menu click and shortcut both call `toggleDot`; user confirmed original menu toggle. Later double-toggle fix is implemented. | Confirm repeated real status-item clicks after applying the deferred fix. |
 | FR-03 | User confirmed real pilot message/reply; separate product sign-in and composer were observed. | Send/receive with the final product bundle; pilot success alone is insufficient. |
 | FR-04 | Same production controllers retain window/view/draft for 50 synthetic cycles; earlier product draft survived ten cycles. | Final authenticated 50-cycle and scroll-position continuity trial. |
@@ -273,12 +278,12 @@ Historical product observations predate the deferred build 8 unless stated other
 | §5.2 Escape and dialogs | Real native key routing in the fixture preserves web-owned Escape and attached sheets, and hides on unhandled Escape. | Real website modals, pickers, and in-page operations. |
 | §5.3 / §7.5 defaults and onboarding | Native unofficial explanation, mode choice, help link, optional login control, shortcut, validated entry URL, and documented defaults are implemented. | Full first-run interaction and assistive-technology check on the acceptance build. |
 | §5.6 recovery | Injected offline, cancelled, HTTP-independent navigation, and web-process errors have safe explicit recovery paths; async browser-launch failure returns to Settings. | Actual offline/reconnect, upstream error, stale session, and WebKit process recovery with a real account. |
-| §7.1–7.4 architecture | Swift/AppKit/SwiftUI, single retained WebKit instance, visibility state, optional preload, persistent per-app storage, top-level routing, and confirmable reset are implemented; deployment target is 14.0. | Verify the composed lifecycle on the final supported OS matrix. Build success is not runtime compatibility proof. |
+| §7.1–7.4 architecture | Swift/AppKit/SwiftUI, single retained WebKit instance, visibility state, optional preload, persistent per-app storage, top-level routing, and confirmable reset are implemented; deployment target is 14.0. | Verify the composed lifecycle on the reference Mac. Build success is not runtime compatibility proof; macOS 14 testing is waived. |
 | §7.6 privacy and identity | About/Settings disclose unofficial status and separate local-computer connector; no native message bridge, private API, user-agent spoof, browser data import, telemetry, or arbitrary keyboard monitor. The sole focus script is first-party and metadata-only. | Recheck service/OAuth policies and distribution entitlements before release; technical embedding success is not an endorsement. |
 | §8 warm/cold latency | No valid measured latency acceptance series exists. | 20 real click/hotkey trials at ≤250 ms; fresh-process icon appearance at ≤2 s. Measure final product, not test harness startup. |
 | §8 idle CPU / memory | No complete app-plus-WebKit baseline exists. No YourDotMini process was running during this audit. | Settle the real page, measure hidden CPU and combined process memory before/after 50 cycles. Do not treat wrapper-only RSS as total memory. |
 | §9 accessibility / appearance | Native labels and template icon exist; icon variants were visually inspected. Passive-focus fixtures pass. | VoiceOver, full keyboard operation, native light/dark/high-contrast surfaces, and unrelated-notification behavior. |
-| §10 platform / resilience / fallback matrix | macOS 27.0.1 synthetic checks and sandbox bookmark restoration pass. | macOS 14 runtime environment, sleep/wake/display scenarios, and a real dedicated browser web app with its own login and dot target. |
+| §10 platform / resilience / fallback matrix | macOS 27.0.1 synthetic checks and sandbox bookmark restoration pass. macOS 14 runtime testing is waived by the user. | Sleep/wake/display scenarios on the reference Mac, and a real dedicated browser web app with its own login and dot target. |
 
 ### Next acceptance gate
 
@@ -288,7 +293,7 @@ the user. Do not replace or launch the real app to bypass that choice. When the
 user chooses to apply it, run the outstanding real-account/window/workflow and
 performance checks against that exact bundle, retaining its identity and hash.
 Manual authentication, account switching, an opt-in login item, and reboot require
-the user's participation. Oldest-OS acceptance requires a macOS 14 test environment.
+the user's participation. A macOS 14 test environment is no longer required.
 
 Phase 3 remains gated on the above MVP acceptance; source compilation, ad-hoc
 signing, and the generated icon do not satisfy signed/notarized distribution.

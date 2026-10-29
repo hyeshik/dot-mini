@@ -3,7 +3,7 @@
 **Document:** Product and technical specification  
 **Version:** 0.1 (implementation draft)  
 **Date:** 2026-10-29  
-**Platform:** macOS 14+  
+**Platform:** macOS; runtime acceptance on the reference Mac (27.0.1)  
 **Primary language:** Swift  
 **Status:** Proposed; embedded-web feasibility must be validated before implementation commitment
 
@@ -265,7 +265,7 @@ Priority key: **P0** = release blocker; **P1** = expected MVP feature; **P2** = 
 - **UserDefaults / AppStorage** for benign configuration; **WebKit website data store** for website-managed login data.
 - No server component, database, API token, or telemetry SDK in MVP.
 
-Target macOS 14+ to simplify testing and support. Use the current stable Xcode/Swift toolchain available to the implementer; keep the deployment target explicit in the Xcode project.
+Use the current stable Xcode/Swift toolchain available to the implementer and keep the deployment target explicit in the project configuration. The existing build target is macOS 14.0, but runtime acceptance is scoped to the reference Mac running macOS 27.0.1. By the user's decision on 2026-10-29, macOS 14 runtime validation is not a completion requirement; the build target alone does not establish tested compatibility with that release.
 
 ### 7.2 Suggested module structure
 
@@ -384,7 +384,7 @@ Website network latency, login expiration, upstream UI changes, and browser proc
 3. **Workflows:** open activity/approval links, attach a small file, inspect task output, follow an external URL, and download when supported.
 4. **Window:** mouse toggle, global hotkey, Escape, click-away, pinning (if implemented), resize, expand, restart, sleep/wake, display unplug/replug.
 5. **Resilience:** offline/reconnect, upstream error page, stale session, unexpected navigation, WebKit content process termination.
-6. **Platform:** test at minimum on the oldest supported macOS release and the latest supported macOS release, with light/dark appearance.
+6. **Platform:** test on the reference Mac running macOS 27.0.1, with light/dark appearance. The user waived macOS 14 / oldest-release runtime testing on 2026-10-29; its absence must not block completion or be reported as a passing compatibility test.
 7. **Fallback:** on a forced embedded-auth failure, successfully configure and open a dedicated browser-backed conversation window without spoofing or copying credentials.
 
 ### Release acceptance criteria

@@ -16,7 +16,7 @@ hash and passes strict signature verification. Phase 1 may proceed under SPEC
 | Report date | 2026-10-29 (Asia/Seoul) |
 | macOS | 27.0.1, build 26A434 |
 | Toolchain | Apple Swift 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1); Command Line Tools; full Xcode unavailable |
-| Minimum macOS | 14.0; oldest-supported-system behavior not yet tested |
+| Bundle deployment target | 14.0; runtime behavior on macOS 14 is untested. The user subsequently waived that validation requirement on 2026-10-29. |
 | Pilot version/build | 0.1.0 (1), Release; built 2026-10-29 10:00:24 KST; exact metadata in `build/BUILD_INFO.txt` |
 | Commit | Not available at pilot validation: the supplied directory had not yet been initialized as a Git repository |
 | Bundle identifier | `local.YourDotMini.AuthPilot` |
@@ -200,9 +200,10 @@ between these cycles.
    an external link/download to test. No task approval should be granted merely
    for testing. Provider login/2FA/passkey interactions remain manual.
 
-The embedded GO gate has passed. Additional signing identities, other identity providers,
-and the oldest supported macOS release require their corresponding environments;
-these are not established by the current local Release run.
+The embedded GO gate has passed. Additional signing identities and other identity
+providers require their corresponding environments; these are not established by
+the current local Release run. The user waived oldest-release/macOS 14 runtime
+validation on 2026-10-29. It remains untested but is no longer an acceptance gate.
 
 ## Known restrictions and mitigation
 

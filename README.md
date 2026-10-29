@@ -64,8 +64,11 @@ and [Icon Composer documentation](https://developer.apple.com/documentation/xcod
 
 ## Build and launch
 
-Requires macOS 14+ and Apple Swift 6.0+ (Xcode or Command Line Tools). There are no
-third-party dependencies. This is a local development bundle, not a notarized release.
+The build targets macOS 14.0 and requires Apple Swift 6.0+ (Xcode or Command Line
+Tools). Runtime acceptance uses the reference Mac running macOS 27.0.1. Testing
+on macOS 14 was waived by the user and is not a completion requirement; compatibility
+with that release has not been verified. There are no third-party dependencies.
+This is a local development bundle, not a notarized release.
 
 ```sh
 ./scripts/build-pilot.sh
