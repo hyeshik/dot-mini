@@ -1,8 +1,12 @@
 # YourDotMini
 
-The embedded authentication gate has passed; see [POC_REPORT.md](POC_REPORT.md).
-The menu bar app is being implemented according to [SPEC.md](SPEC.md), with
-current verification and remaining work in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+The authentication pilot passed the mandatory checks for the tested account and
+pilot bundle; see [POC_REPORT.md](POC_REPORT.md). Final-product acceptance remains
+pending, including authenticated product relaunch, session longevity, and recovery.
+The menu bar app is being implemented according to [SPEC.md](SPEC.md), with current
+verification and remaining work in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+
+## Menu bar app
 
 Build and launch the menu bar app:
 
@@ -21,7 +25,8 @@ Enabled macOS shortcuts and other apps' exclusive reservations are rejected whil
 preserving the previous binding. Shared or app-local shortcuts may not be detectable;
 choose another combination if another app also responds.
 The product has its own sandbox identity (`local.YourDotMini`), so sign in through
-the website once; it does not copy the pilot's or any browser's cookies.
+its website. Sessions can expire or require reauthentication. It does not copy
+the pilot's or any browser's cookies.
 
 When the window becomes visible, it focuses the message input if that input is
 visible and usable. A missing/changed composer quietly leaves focus alone.
@@ -38,7 +43,41 @@ To prepare an update while the installed app remains running:
 The command prints a fresh `build/staged.*/YourDotMini.app` path. It does not
 replace or restart the installed app. Quit and apply the staged update later.
 
-The instructions below describe the independently retained authentication pilot.
+## Product limitations and privacy
+
+- **Embedded sign-in:** pilot success applies to the tested account and bundle.
+  Other providers, account switching, genuine session expiration, and final-product
+  persistence still need validation. Google's [OAuth policy](https://developers.google.com/identity/protocols/oauth2/policies#use-secure-browsers)
+  prohibits directing authorization requests to developer-controlled embedded
+  user agents. A successful sign-in trial does not establish provider support.
+  Use browser mode when embedded authentication is unsupported; do not bypass
+  provider restrictions or import session cookies.
+- **Browser fallback:** the default browser and a selected dedicated browser web
+  app use their own sign-in. Continue the workflow there; signing in there does
+  not sign the embedded view in. Fixture tests verify app launching and bookmark
+  restoration, while actual browser-app login, relaunch, and dot targeting remain
+  unverified. Embedded popups are blocked; clicked external HTTPS links, including
+  new-window links, can open in the default browser.
+- **Authentication-host approval:** unknown top-level redirects require a manual
+  choice. Approval permits that exact hostname for the current process; the app
+  does not verify that it belongs to a legitimate sign-in flow and does not keep
+  an origin indicator visible after loading. Cancel unfamiliar requests and
+  continue in your browser if you cannot verify the destination.
+- **Attachments and media:** file selection grants read access to files you
+  choose. Actual uploads and task/approval-detail workflows still need live
+  validation. Downloads, microphone, and camera features require continuing in
+  the browser.
+- **Saved destination URLs:** validation currently preserves query strings and
+  fragments. The complete URL is stored in plaintext preferences (`UserDefaults`)
+  and passed to the default browser when you choose Open Dot in Default Browser.
+  Until validation rejects sensitive parameters, save only a clean dot or
+  conversation URL without authentication codes, tokens, or other secrets.
+  Clear Website Data removes WebKit data but leaves this saved preference intact;
+  replace a sensitive saved URL in Settings with a clean destination.
+- **Session storage and diagnostics:** hiding or quitting preserves website
+  authentication data for future use. Wrapper logs omit URL paths, queries,
+  fragments, credentials, and message contents, but include hostnames. WebKit and
+  macOS can emit separate diagnostics; review log exports before sharing them.
 
 ## App icon
 
@@ -62,13 +101,26 @@ cp build/app-icon/compiled/AppIcon.icns Resources/YourDotMini/AppIcon.icns
 Design references: [Apple app icon guidelines](https://developer.apple.com/design/human-interface-guidelines/app-icons/)
 and [Icon Composer documentation](https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer).
 
-## Build and launch
+## Build requirements and distribution
 
-The build targets macOS 14.0 and requires Apple Swift 6.0+ (Xcode or Command Line
+Both apps target macOS 14.0 and require Apple Swift 6.0+ (Xcode or Command Line
 Tools). Runtime acceptance uses the reference Mac running macOS 27.0.1. Testing
 on macOS 14 was waived by the user and is not a completion requirement; compatibility
 with that release has not been verified. There are no third-party dependencies.
-This is a local development bundle, not a notarized release.
+
+Both build scripts produce local development bundles, ad-hoc signed by default.
+They disable signing timestamps and do not notarize the result. Selecting a
+different signing identity alone does not make a distribution-ready release.
+Public distribution needs a separate Developer ID signing and notarization
+workflow with a secure timestamp; see [Apple's notarization requirements](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
+
+## Authentication pilot
+
+The following subsections describe the independently retained
+`YourDotMiniAuthPilot.app`. Its controls and restrictions are separate from the
+menu bar product described above.
+
+### Build and launch
 
 ```sh
 ./scripts/build-pilot.sh
@@ -94,11 +146,11 @@ Finder, not `swift run`; the bare executable rejects a missing bundle identity.
 
 For a separate Release trial, first finish and record the current trial, then use
 `./scripts/build-pilot.sh release`. This uses the same bundle path, identifier, and
-entitlements. Ad-hoc Release is not Developer ID signing or notarization. A future
-product identity must repeat the authentication gate; pilot success cannot prove
-session migration into a differently identified app.
+entitlements. Ad-hoc Release is not Developer ID signing or notarization. The menu
+bar product's separate identity requires its own persistence validation; pilot
+success cannot establish persistence for that app.
 
-## Pilot controls
+### Pilot controls
 
 The pilot uses one ordinary Dock-visible window and one long-lived `WKWebView`.
 It loads `https://chatgpt.com/dots` without changing the user agent or injecting scripts.
@@ -119,7 +171,7 @@ Normal Edit commands support copy/paste, selection, and undo in web content.
 The app does not infer authentication from page content: “Loaded” only reports a
 completed navigation, not a successful login or a passing pilot test.
 
-## Execute the gate
+### Execute the gate
 
 Follow P0-01 through P0-07 in order and record observations in `POC_REPORT.md`.
 Sign in manually through the site's normal controls with the real account/provider.
@@ -149,7 +201,7 @@ Do not force quit or reboot a machine merely to test this app without arranging
 it with the person using the machine. A successful unauthenticated cold launch is
 not evidence of authenticated session persistence.
 
-## Diagnostics and restrictions
+### Pilot diagnostics and restrictions
 
 In Console, filter on subsystem `local.YourDotMini.AuthPilot`, or use:
 
@@ -178,8 +230,10 @@ review exports before sharing. A force kill cannot emit a graceful exit event.
   remains a manual website test. File names/content are not logged.
 - Downloads and microphone/camera access are not implemented. The status strip
   explains the limitation; use Open in Browser and repeat the action there.
-- No automatic retries, session scraping, script bridges, custom URL handlers,
-  TLS exceptions, browser-profile access, launch-at-login, or menu bar UI.
+- The pilot has no automatic retries, session scraping, script bridges, custom
+  URL handlers, TLS exceptions, browser-profile access, launch-at-login, or menu
+  bar UI. The menu bar product includes optional launch-at-login controls and
+  the narrowly scoped composer-focus helper described above.
 - The pilot is unofficial and does not provide the dot's optional local-computer
   connection. [OpenAI's setup documentation](https://learn.chatgpt.com/docs/dots/getting-started)
   describes that connection separately; it does not establish embedded WebKit support.
@@ -232,6 +286,8 @@ account data and do not access any browser profile. This validates saved app
 selection and sandbox access; an actual browser web app still needs its own
 login, relaunch, and dot-destination acceptance check.
 
-Source layout: `Sources/PilotCore` contains pure navigation/redaction logic;
-`Sources/YourDotMiniAuthPilot` contains the native app and WebKit delegates;
-`Resources` holds the fixed bundle metadata and sandbox entitlements.
+Source layout: `Sources/PilotCore` contains shared navigation/redaction logic;
+`Sources/YourDotMiniAuthPilot` contains the pilot app and WebKit delegates;
+`Sources/YourDotMiniCore` and `Sources/YourDotMiniUI` contain the menu bar product's
+preferences, native UI, and browser controllers. `Resources` holds bundle metadata
+and sandbox entitlements for both apps.
