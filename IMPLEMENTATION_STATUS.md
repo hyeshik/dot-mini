@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated 2026-10-29 (Asia/Seoul). This is an acceptance record, not a declaration
+Updated 2026-10-30 (Asia/Seoul). This is an acceptance record, not a declaration
 that the full specification is complete.
 
 ## Phase 0 — GO (embedded)
@@ -236,6 +236,44 @@ compiles in Release with Swift warnings treated as errors. These builds do not
 replace either installed app. The one-time P0-08 follow-up is scheduled for
 2026-10-30 10:30 KST; the actual next-day result remains pending.
 
+Notarization build support (2026-10-30):
+
+- Both builders accept `release --notarize`, automatically create a fresh staging
+  directory, and require an exact Developer ID Application identity plus a named
+  `notarytool` Keychain profile. Local builds retain ad-hoc signing by default;
+  the pilot builder now also supports `--stage` without notarization.
+- The release path uses a secure signing timestamp and hardened runtime, submits
+  an archive to Apple, requires `Accepted`, staples and validates the ticket, and
+  runs strict signature verification and Gatekeeper assessment. The final ZIP and
+  SHA-256 checksum are emitted after verification and successful packaging.
+  Credentials are not stored in source or build metadata.
+- Eight build-script tests cover both builders using isolated fixtures and mocked
+  compiler/signing/Apple-service commands, with real ZIP/plist/checksum tools.
+  Coverage includes preserved installed bundles, local defaults, invalid signing
+  identities, absent profile configuration, rejection/incomplete responses, and
+  signing, stapling, validation, Gatekeeper, packaging, and checksum failures.
+  The product's `--dmg` option also covers a separately notarized disk image
+  containing the stapled app and an Applications shortcut.
+- Both actual local Release builds passed strict ad-hoc signature verification
+  in fresh staging directories. No installed app or retained pilot was replaced.
+
+Live product app and DMG notarization (2026-10-30):
+
+- Built YourDotMini 0.2.0 (build 8), arm64, in `build/staged.THFAUW`, signed with
+  Developer ID Application and a secure timestamp, using a Keychain profile for
+  Apple authentication. No credential values were exported or stored in source.
+- Apple accepted app submission `f9eb11c1-a17f-4a3a-8e18-bbf37215e682` and DMG
+  submission `a4e38701-c80e-4511-b4fb-272761878e8b`. Both tickets were stapled and
+  validated; strict signature verification and Gatekeeper assessment passed.
+- Mounted the final DMG read-only and verified its app's signature, stapled ticket,
+  and Gatekeeper acceptance, plus its `/Applications` shortcut and arm64 binary.
+  The image was ejected without installing or launching the app. Its SHA-256 check
+  passed: `4fdadc3c591ea6a006a720eb280a32b4dff2c1e53750ea7b12bec76c3e3c8e02`.
+- Outputs are `build/staged.THFAUW/YourDotMini.dmg`, its `.sha256` checksum,
+  the stapled app, and the notarized ZIP. Receipts remain under `notarization/`.
+  This validates packaging and notarization; product runtime and authenticated
+  persistence under the Developer ID identity still require acceptance testing.
+
 ## Remaining scope
 
 ### Requirement audit — 2026-10-29
@@ -272,7 +310,7 @@ Historical product observations predate the deferred build 8 unless stated other
 | FR-12 | URL validation and preference persistence pass; native reset confirmation and recovery code exist; pilot reload/reset recovery observed. | Final product Reload, Save and Open, and reset Cancel/Confirm recovery trials. Preserve the longevity pilot until P0-08 is complete. |
 | FR-13 | Navigation policy tests, native file-picker delegate, and explicit popup/download/media browser handoffs exist. | Real website workflows and browser handoffs from the acceptance matrix. |
 | FR-14 | Production controllers pass native synthetic pinning and focus-loss checks, including inactive Settings and owned-sheet protection. | Final live-site multi-window/dialog behavior. |
-| FR-15 / Phase 3 | Editable/native app icon completed by explicit user request. Existing logs redact URLs and error detail. | MVP acceptance first; then distribution/update design, Developer ID signing, notarization, and update smoke checks. Credentials and release destination are not provided. |
+| FR-15 / Phase 3 | Editable/native app icon and opt-in ZIP/DMG notarization workflow implemented. Build-script fixtures, live product Developer ID signing, Apple submissions, stapling, and Gatekeeper/mounted-image checks pass. | Final-product runtime and persistence acceptance under the signed identity, distribution/update design, and update smoke checks. No external release destination is configured. |
 | FR-16 / §13 | Explicitly conditional, uncommitted future capabilities. | No multiple-profile implementation is required without a supported upstream capability and an agreed user need. |
 | §5.1 composer focus refinement | Visible/hidden/missing/covered/disabled/ambiguous inputs, bounded hydration, cancellation, passive focus, first load, unhide, and restoration pass in fixtures. | Verify the current real ChatGPT composer after installing the deferred update. Missing markup remains a silent no-op. |
 | §5.2 Escape and dialogs | Real native key routing in the fixture preserves web-owned Escape and attached sheets, and hides on unhandled Escape. | Real website modals, pickers, and in-page operations. |
@@ -295,10 +333,12 @@ performance checks against that exact bundle, retaining its identity and hash.
 Manual authentication, account switching, an opt-in login item, and reboot require
 the user's participation. A macOS 14 test environment is no longer required.
 
-Phase 3 remains gated on the above MVP acceptance; source compilation, ad-hoc
-signing, and the generated icon do not satisfy signed/notarized distribution.
+Release readiness remains gated on the above MVP acceptance. Successful product
+signing and notarization validate packaging; final-product runtime, authenticated
+persistence, and update smoke checks remain separate acceptance requirements.
 The full objective is incomplete. The pending evidence and user/environment
 dependencies above must remain visible rather than being converted to passes.
 
-The implementation is not release-ready. No launch-at-login registration,
-external publication, or distribution signing has been performed.
+The implementation is not release-ready. Product Developer ID signing and
+notarization passed; no launch-at-login registration, external publication, or
+installation of the notarized artifact was performed.

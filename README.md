@@ -108,11 +108,84 @@ Tools). Runtime acceptance uses the reference Mac running macOS 27.0.1. Testing
 on macOS 14 was waived by the user and is not a completion requirement; compatibility
 with that release has not been verified. There are no third-party dependencies.
 
-Both build scripts produce local development bundles, ad-hoc signed by default.
-They disable signing timestamps and do not notarize the result. Selecting a
-different signing identity alone does not make a distribution-ready release.
-Public distribution needs a separate Developer ID signing and notarization
-workflow with a secure timestamp; see [Apple's notarization requirements](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
+Both build scripts produce local development bundles, ad-hoc signed by default,
+with signing timestamps disabled. Add `--notarize` to an explicit `release` build
+to use Developer ID signing, a secure timestamp, and Apple's notarization service.
+This option always creates a fresh `build/staged.*` directory, preserving the
+installed app and the retained persistence-trial pilot. `--stage` is also available
+for local builds of either app.
+
+### Notarized Release builds
+
+Install a valid **Developer ID Application** certificate and its private key in
+your Keychain, and choose its full name or SHA-1 fingerprint from:
+
+```sh
+security find-identity -v -p codesigning
+```
+
+Store notarization credentials once using Apple's interactive prompts:
+
+```sh
+xcrun notarytool store-credentials "YourDotMini-notary"
+```
+
+The profile holds the credentials in the Keychain. Keep passwords and API private
+keys out of the repository and command-line arguments. Builds use only the
+profile name through `NOTARY_KEYCHAIN_PROFILE`; an Apple Development certificate
+or ad-hoc signature is not accepted for notarization.
+
+Build and notarize the menu bar app, replacing the example certificate name with
+your actual identity (or its SHA-1 fingerprint):
+
+```sh
+DOT_SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' \
+NOTARY_KEYCHAIN_PROFILE='YourDotMini-notary' \
+./scripts/build-app.sh release --notarize
+```
+
+To also build a notarized DMG with an Applications shortcut, add `--dmg`:
+
+```sh
+DOT_SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' \
+NOTARY_KEYCHAIN_PROFILE='YourDotMini-notary' \
+./scripts/build-app.sh release --notarize --dmg
+```
+
+The app is notarized and stapled first, then copied into a compressed disk image.
+The image is separately signed, submitted, stapled, and checked by Gatekeeper.
+The final `YourDotMini.dmg` and `YourDotMini.dmg.sha256` appear beside the app only
+after these checks pass. Its receipt and rejection diagnostics are kept in
+`notarization/dmg/`. This option is available on the product builder and requires
+`--notarize`.
+
+For a separate notarized pilot build:
+
+```sh
+PILOT_SIGNING_IDENTITY='Developer ID Application: Your Name (TEAMID)' \
+NOTARY_KEYCHAIN_PROFILE='YourDotMini-notary' \
+./scripts/build-pilot.sh release --notarize
+```
+
+The workflow verifies the signing identity before building, signs with hardened
+runtime and the existing sandbox entitlements, and submits a ZIP with
+`notarytool --wait`. This uploads the built app to Apple and waits for processing.
+Only an `Accepted` result permits ticket stapling, ticket validation, strict
+signature verification, and Gatekeeper assessment. After all checks pass, it
+creates a final ZIP containing the stapled app and a SHA-256 checksum file.
+
+For the product, the outputs are `build/staged.*/YourDotMini.app`,
+`YourDotMini.zip`, and `YourDotMini.zip.sha256` in that same staging directory.
+The pilot uses `YourDotMiniAuthPilot` in these names. The `notarization/`
+subdirectory retains the unstapled upload ZIP and `submission.plist` receipt;
+use the final ZIP beside the app for distribution. Failed submissions attempt to
+save Apple's diagnostic log as `notarization/log.json` and exit without a final
+distribution ZIP. If submission is interrupted, inspect `notarytool history`
+with the same Keychain profile before submitting again.
+
+Selecting a signing identity without `--notarize` still produces a local build.
+Notarization does not establish runtime or authentication compatibility; the
+remaining product acceptance checks still apply. See [Apple's notarization requirements](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
 
 ## Authentication pilot
 
@@ -134,8 +207,9 @@ build flag is for SwiftPM; **the app itself always has App Sandbox enabled**.
 
 Keep this exact app bundle for a persistence trial. Do not rebuild, change its
 identifier, change its signing identity, or clear its data between restart cycles.
-The build script refuses to replace a running pilot. Launch through `open` or
-Finder, not `swift run`; the bare executable rejects a missing bundle identity.
+The build script refuses to replace a running pilot. Use `--stage` to prepare a
+separate bundle. Launch through `open` or Finder, not `swift run`; the bare
+executable rejects a missing bundle identity.
 
 - Bundle identifier: `local.YourDotMini.AuthPilot`
 - Deployment target: macOS 14.0
@@ -144,11 +218,12 @@ Finder, not `swift run`; the bare executable rejects a missing bundle identity.
 - Signing: ad-hoc by default; optional `PILOT_SIGNING_IDENTITY` for a local signing identity
 - App storage: managed by macOS/WebKit under this app's own sandbox identity
 
-For a separate Release trial, first finish and record the current trial, then use
-`./scripts/build-pilot.sh release`. This uses the same bundle path, identifier, and
-entitlements. Ad-hoc Release is not Developer ID signing or notarization. The menu
-bar product's separate identity requires its own persistence validation; pilot
-success cannot establish persistence for that app.
+For a separate local Release trial, first finish and record the current trial,
+then use `./scripts/build-pilot.sh release`. This uses the same bundle path,
+identifier, and entitlements. A notarized trial uses `release --notarize` as
+described above and needs its own persistence validation under that signing
+identity. The menu bar product's separate identity also requires its own
+persistence validation; pilot success cannot establish persistence for that app.
 
 ### Pilot controls
 
@@ -244,7 +319,19 @@ review exports before sharing. A force kill cannot emit a graceful exit event.
 ./scripts/test.sh
 ./scripts/test-focus-window.sh
 ./scripts/build-pilot.sh release
+python3 Tests/BuildScripts/test_notarization.py -v
 ```
+
+The build-script tests run in temporary fixtures with mocked compiler, signing,
+and Apple-service commands. They check both builders, preserved installed bundles,
+local-build defaults, identity and profile requirements, rejection/error handling,
+stapling and verification failures, final archives containing a ticket, and the
+DMG packaging and failure paths. ZIP, plist, and checksum checks use the real macOS
+tools; disk-image creation is mocked in the fixture tests. These tests require Python 3
+and do not upload an app or access real signing/notarization credentials; an actual
+Apple submission is a separate end-to-end check. Live product app/DMG notarization
+and mounted-image verification results are recorded in
+[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 Unit tests cover top-level navigation decisions, host-boundary attacks, scoped
 authentication-host approval, unsupported schemes, and diagnostic redaction.
