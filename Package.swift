@@ -8,6 +8,7 @@ let package = Package(
         .executable(name: "YourDotMiniAuthPilot", targets: ["YourDotMiniAuthPilot"]),
         .executable(name: "YourDotMini", targets: ["YourDotMini"]),
         .executable(name: "WindowFocusChecks", targets: ["WindowFocusChecks"]),
+        .executable(name: "SandboxChecks", targets: ["SandboxChecks"]),
     ],
     targets: [
         .target(name: "PilotCore"),
@@ -20,5 +21,7 @@ let package = Package(
         .testTarget(name: "YourDotMiniUITests", dependencies: ["YourDotMiniUI"]),
         .executableTarget(name: "WindowFocusChecks", dependencies: ["YourDotMiniUI", "YourDotMiniCore"],
                           path: "Tests/WindowFocusChecks"),
+        .executableTarget(name: "SandboxChecks", dependencies: ["YourDotMiniUI", "YourDotMiniCore"],
+                          path: "Tests/SandboxChecks"),
     ]
 )

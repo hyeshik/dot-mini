@@ -198,7 +198,8 @@ Escape and browser-app recovery checks (2026-10-29):
   file-selection entitlement. Resolution suppresses UI and volume mounting and
   rechecks the bundle and executable before launch, rejecting YourDotMini itself
   and unavailable apps. Four tests cover these paths using temporary fixtures.
-  Sandbox access across relaunch and a real dedicated browser app remain untested.
+  Real sandbox access across relaunch was subsequently checked below; a dedicated
+  browser app with a real dot session remains untested.
 
 All **46 tests in 8 suites** and the full native integration check pass.
 Latest deferred bundle: **build 8**, `build/staged.bc4JYo/YourDotMini.app`, with
@@ -206,6 +207,34 @@ warnings-as-errors build and strict ad-hoc signature verification. It contains
 all prior footer, autofocus, and default-shortcut changes and supersedes build 7.
 The installed bundle remains build 3. Nothing was installed, restarted, registered
 for login, notarized, or published during these checks.
+
+Sandbox browser-app integration (2026-10-29, macOS 27.0.1):
+
+- Added `scripts/build-sandbox-checks.sh` and an isolated `SandboxChecks` target.
+  It builds two signed test apps with the same sandbox entitlements as the product:
+  `local.YourDotMini.SandboxChecks` and `local.YourDotMini.SandboxChecks.Target`.
+  The test uses the production app selector, preferences, bookmark resolution,
+  and `NSWorkspace` launcher. No web view or account data is involved.
+- In `build/sandbox-checks.YaVJav`, choosing the generated fixture through the
+  native file panel stored a read-only security-scoped bookmark. Opening the
+  fixture started its separate process (PID 15684; test app PID 15473).
+- After both processes exited and absence was independently checked, the identical
+  test app relaunched as PID 16301 and reported a saved fixture. Without another
+  file-selection dialog, production launch code started the fixture. A controlled
+  repeat at 23:20:51 KST confirmed new fixture PID 16660 before any accessibility
+  observation of the fixture, excluding observation-triggered launch as evidence.
+- The test executable SHA-256 stayed
+  `95de8ea2f289e4f05cd2c358ccdbe5c922befc1a12cc96011c501395794dbd99`;
+  strict signatures passed for both bundles. All test processes were confirmed
+  absent after cleanup. The product and frozen authentication pilot were unchanged.
+
+This passes the sandbox app-selection/bookmark/relaunch mechanism on this host.
+It does not prove Safari/other browser web-app authentication, direct dot targeting,
+window activation semantics, oldest-OS support, or product login-item behavior.
+After adding the target, all 46 tests in 8 suites pass, and every SwiftPM product
+compiles in Release with Swift warnings treated as errors. These builds do not
+replace either installed app. The one-time P0-08 follow-up is scheduled for
+2026-10-30 10:30 KST; the actual next-day result remains pending.
 
 ## Remaining scope
 

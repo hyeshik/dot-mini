@@ -159,7 +159,7 @@ No wrapper authentication/persistence failure was observed in this session.
 | P0-05 | Three normal quits and cold relaunches | Pass | 3/3 ordered full process exits and authenticated relaunches passed at 10:29–10:31, after P0-03/P0-04. |
 | P0-06 | Force quit and cold relaunch | Pass | Ordered SIGKILL/absence/relaunch check at 10:31:32–10:31:38 restored the authenticated composer. |
 | P0-07 | OS reboot and relaunch | Pass | User confirmed no authentication required after reboot. New boot time 2026-10-29 10:37:17 KST; pilot hash/signature unchanged, PID 2367 running. |
-| P0-08 | Next-day session check | Pending | Retest on 2026-10-30, ideally at least 24 hours after the final sign-in (~10:18 KST). No automatic check scheduled. |
+| P0-08 | Next-day session check | Pending | One-time thread follow-up scheduled for 2026-10-30 10:30 KST, after 24 hours since the final sign-in (~10:18 KST). Requires a user-reported result; the follow-up will not inspect or alter the pilot. |
 | P0-09 | Sign out / invalid session / sign back in | Conditional | Reset followed by manual sign-in recovered successfully; website sign-out and genuine expiration remain untested. |
 | P0-10 | Approval/task detail, attachment, external link | Conditional | Native file chooser opened/cancelled successfully; explicit Open in Browser dispatch succeeded. Actual upload, task/approval details, ordinary external links, browser-side results, and downloads remain untested. |
 | P0-11 | 480 × 720 and 420 × 520 web viewports | Pass | Both presets preserved the accessible composer/draft; user explicitly confirmed that both sizes are usable. |
@@ -192,6 +192,8 @@ between these cycles.
 1. **Next day (P0-08):** retest on 2026-10-30 after a realistic idle period. Do not
    clear data, rebuild, or change signing/bundle identity during the trial. The
    final sign-in was around 10:18 KST on 2026-10-29.
+   A one-time follow-up in this thread is scheduled for 2026-10-30 10:30 KST
+   (automation `yourdotmini`); scheduling is not a passing test result.
 2. **Session recovery/workflows (P0-09/P0-10):** after the persistence trial,
    sign out through the website and sign in again manually. Choose a harmless
    file for a real upload, a suitable task/approval-detail page to inspect, and

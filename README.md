@@ -213,6 +213,22 @@ rejection. They do not launch a browser or prove sandbox permission persistence.
 They cannot validate real account access, provider compatibility, or persistence
 across process termination/reboot. Use the pilot matrix for those requirements.
 
+For a separate, real App Sandbox check of the browser-app selector and launcher:
+
+```sh
+./scripts/build-sandbox-checks.sh
+```
+
+The command prints two fresh app paths. Open `YourDotMiniSandboxChecks.app`, use
+Choose Fixture App to select the printed `YourDotMiniFallbackFixture.app`, and
+select Open Saved Fixture. Quit both test apps completely, reopen the identical
+test app, and select Open Saved Fixture again without reselecting a file.
+The fixture should launch after both trials. Both apps use separate test bundle
+identifiers and the product's sandbox entitlements. They contain no website or
+account data and do not access any browser profile. This validates saved app
+selection and sandbox access; an actual browser web app still needs its own
+login, relaunch, and dot-destination acceptance check.
+
 Source layout: `Sources/PilotCore` contains pure navigation/redaction logic;
 `Sources/YourDotMiniAuthPilot` contains the native app and WebKit delegates;
 `Resources` holds the fixed bundle metadata and sandbox entitlements.
