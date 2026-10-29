@@ -202,8 +202,14 @@ The same integration check covers pinning/automatic hiding and shortcut conflict
 It temporarily reserves all-modifier F12/F19 combinations in a test process and
 helper, releases them on exit, and dispatches only internal Carbon test events.
 `./scripts/test-focus-window.sh --hotkey-only` runs just the shortcut checks.
+The Escape check sends native key events directly to the synthetic test window;
+web-handled Escape and attached sheets keep it visible, while unhandled Escape
+hides it. Use `./scripts/test-focus-window.sh --escape-only` to run that check alone.
 Login-item tests use a fake backend and do not change macOS Login Items. Browser
 recovery tests inject errors without disconnecting the network or killing WebKit.
+Browser-app fallback tests use temporary fixture bundles and an injected launcher
+to verify asynchronous failure reporting, bookmark resolution, and invalid-app
+rejection. They do not launch a browser or prove sandbox permission persistence.
 They cannot validate real account access, provider compatibility, or persistence
 across process termination/reboot. Use the pilot matrix for those requirements.
 

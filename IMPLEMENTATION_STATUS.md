@@ -50,9 +50,9 @@ The initial Phase 2 build started and rendered Settings correctly. Launch at
 Login was left off; at that run ServiceManagement reported that the development
 app was not found. Real opt-in registration/reboot acceptance remains pending.
 
-Current verification: 42 tests in 7 suites pass, including preference migration,
+Current verification: 46 tests in 8 suites pass, including preference migration,
 disabled-shortcut persistence, URL validation, composer focus, login-item state,
-and browser-error recovery. The app builds with Swift
+browser-error recovery, and browser-app fallback. The app builds with Swift
 warnings treated as errors and passes strict ad-hoc signature verification.
 The CLT SDK's missing SwiftUI State macro plugin is avoided by selecting the
 existing macOS 14-compatible property wrapper through a type alias.
@@ -184,9 +184,26 @@ it generates no physical keyboard input. The window tests and all **42 tests in
 7 suites** pass. Focus checks ensure the test app remains inactive; switching
 between other apps during a run is not misclassified as focus stealing.
 
-Latest deferred bundle: **build 7**, `build/staged.M4JqVF/YourDotMini.app`, with
+Escape and browser-app recovery checks (2026-10-29):
+
+- Native Escape events delivered directly to the synthetic WebKit window confirm
+  that a page handler calling `preventDefault()` keeps the window visible. An
+  attached native sheet also prevents wrapper dismissal. Unhandled Escape hides
+  the window. This verifies native routing, not the live website's modal behavior.
+- A browser-app launch can fail after `NSWorkspace` initially accepts the request.
+  Such asynchronous failures now reopen Settings from the menu/shortcut path,
+  making the recovery message visible. Both success and failure completions are
+  covered with an injected launcher, without starting another application.
+- Selected app bookmarks now explicitly request read-only access, matching the
+  file-selection entitlement. Resolution suppresses UI and volume mounting and
+  rechecks the bundle and executable before launch, rejecting YourDotMini itself
+  and unavailable apps. Four tests cover these paths using temporary fixtures.
+  Sandbox access across relaunch and a real dedicated browser app remain untested.
+
+All **46 tests in 8 suites** and the full native integration check pass.
+Latest deferred bundle: **build 8**, `build/staged.bc4JYo/YourDotMini.app`, with
 warnings-as-errors build and strict ad-hoc signature verification. It contains
-all prior footer, autofocus, and default-shortcut changes and supersedes build 6.
+all prior footer, autofocus, and default-shortcut changes and supersedes build 7.
 The installed bundle remains build 3. Nothing was installed, restarted, registered
 for login, notarized, or published during these checks.
 

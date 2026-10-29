@@ -51,12 +51,12 @@ public final class MenuBarAppDelegate: NSObject, NSApplicationDelegate, NSMenuIt
 
     private func toggleDot() {
         if settings.value.browsingMode == .browserApp {
-            if !fallback.open() { showSettings() }
+            if !fallback.open(onFailure: { [weak self] in self?.showSettings() }) { showSettings() }
         } else { ensureWindow().toggle() }
     }
     @objc private func showDot() {
         if settings.value.browsingMode == .browserApp {
-            if !fallback.open() { showSettings() }
+            if !fallback.open(onFailure: { [weak self] in self?.showSettings() }) { showSettings() }
         } else { ensureWindow().showDot() }
     }
     @objc private func hideDot() {

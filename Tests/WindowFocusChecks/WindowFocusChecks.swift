@@ -58,9 +58,16 @@ private final class CheckDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         Task {
             do {
+                if CommandLine.arguments.contains("--escape-only") {
+                    try await checkEscape()
+                    print("PASS: handled web Escape, native dialog Escape, and unhandled Escape dismissal")
+                    exit(0)
+                }
                 if !CommandLine.arguments.contains("--hotkey-only") {
                     try await checkWindow()
                     print("PASS: initial load, 50 hide/show cycles, selected-message refocus, retained draft/view, passive focus, repeated-show no-op, app unhide, minimize/restore, hidden preload, pinning/focus-loss policy")
+                    try await checkEscape()
+                    print("PASS: handled web Escape, native dialog Escape, and unhandled Escape dismissal")
                 }
                 try await checkHotKeyConflicts()
                 print("PASS: cross-process shortcut conflict, prior binding retained, disabled-event suppression, registration cleanup")
@@ -276,6 +283,72 @@ private final class CheckDelegate: NSObject, NSApplicationDelegate {
         try await waitUntil { !window.isVisible }
         try require(NSWorkspace.shared.frontmostApplication?.processIdentifier != ProcessInfo.processInfo.processIdentifier && !NSApp.isActive,
                     "focus-loss checks must preserve the foreground app")
+    }
+
+    private func checkEscape() async throws {
+        let suite = "YourDotMini.escape-checks.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else { throw CheckFailure("test defaults") }
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = SettingsStore(repository: PreferencesRepository(defaults: defaults))
+        settings.update { $0.keepOpen = true }
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .nonPersistent()
+        let webView = FixtureWebView(frame: .zero, configuration: configuration)
+        let browser = DotBrowserController(diagnostics: DotDiagnostics(), webView: webView)
+        let controller = DotWindowController(browser: browser, settings: settings)
+        guard let window = controller.window else { throw CheckFailure("missing escape window") }
+        window.ignoresMouseEvents = true
+        defer { controller.hideDot(); window.close() }
+        controller.showDot(activating: false)
+        try await waitForFocus(webView, browser: browser, stage: "Escape fixture")
+        window.makeKey()
+        window.makeFirstResponder(webView)
+        _ = try await evaluate(webView, """
+            window.fixtureEscapeCount = 0;
+            window.fixtureEscapeHandler = event => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    window.fixtureEscapeCount += 1;
+                }
+            };
+            document.addEventListener('keydown', window.fixtureEscapeHandler);
+            ''
+            """)
+        try sendEscape(to: window)
+        var handled = false
+        for _ in 0..<100 {
+            handled = (try await evaluate(webView, "String(window.fixtureEscapeCount)")) == "1"
+            if handled { break }
+            try await Task.sleep(for: .milliseconds(25))
+        }
+        try require(handled, "fixture did not receive its native Escape key")
+        try require(window.isVisible, "web-owned Escape must not hide the window")
+        _ = try await evaluate(webView, "document.removeEventListener('keydown', window.fixtureEscapeHandler); ''")
+
+        let sheet = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 200, height: 100),
+                            styleMask: [.titled], backing: .buffered, defer: false)
+        sheet.isReleasedWhenClosed = false
+        window.beginSheet(sheet, completionHandler: nil)
+        window.cancelOperation(nil)
+        try require(window.isVisible && window.attachedSheet === sheet, "native sheet must prevent wrapper Escape dismissal")
+        window.endSheet(sheet)
+        sheet.orderOut(nil)
+        sheet.close()
+        try await waitUntil { window.attachedSheet == nil }
+        window.makeFirstResponder(webView)
+        try sendEscape(to: window)
+        try await waitUntil { !window.isVisible }
+    }
+
+    private func sendEscape(to window: NSWindow) throws {
+        for type in [NSEvent.EventType.keyDown, .keyUp] {
+            guard let event = NSEvent.keyEvent(with: type, location: .zero, modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+                context: nil, characters: "\u{1b}", charactersIgnoringModifiers: "\u{1b}", isARepeat: false, keyCode: 53) else {
+                throw CheckFailure("could not create fixture Escape event")
+            }
+            window.sendEvent(event)
+        }
     }
 
     private func waitForFocus(_ webView: WKWebView, browser: DotBrowserController, stage: String) async throws {
