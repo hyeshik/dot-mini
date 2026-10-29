@@ -1,0 +1,33 @@
+{
+  "fill": {
+    "automatic-gradient": "extended-srgb:0.92549,0.95686,0.95294,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "Dot.svg",
+          "name": "Dot",
+          "fill": {
+            "automatic-gradient": "extended-srgb:0.05098,0.54118,0.49020,1.00000"
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.35
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.12
+      },
+      "name": "Three-hole dot"
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}

@@ -1,0 +1,22 @@
+# SwiftPM caches and generated builds
+/.build/
+/build/
+/.swiftpm/
+/DerivedData/
+*.app/
+*.dSYM/
+
+# Per-user Xcode state
+xcuserdata/
+*.xcuserstate
+
+# macOS metadata
+.DS_Store
+._*
+
+# Local environment and signing credentials
+.env
+.env.*
+!.env.example
+*.p12
+*.p8
